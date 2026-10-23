@@ -1,0 +1,50 @@
+/* 虾皮批量改价改库存：只用 kit.css 的变量。类名统一以 sb- 开头。 */
+.sb-root { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.sb-root.sb-hover { outline: 2px dashed var(--primary); outline-offset: -4px; }
+.sb-tabs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sb-conn { display: inline-flex; align-items: center; gap: 6px; font-size: .88em; color: var(--muted); }
+.sb-conn.ok { color: var(--ok); font-weight: 500; }
+.sb-work { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.sb-bar, .sb-foot { display: flex; align-items: center; gap: 10px; padding: 8px 12px; flex-wrap: wrap; }
+.sb-file { color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.sb-inline { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .92em; }
+.sb-sel { width: auto; }
+.sb-progress { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.sb-empty { display: grid; justify-items: center; gap: 8px; padding: 40px 24px; text-align: center; color: var(--muted); }
+.sb-empty b { color: var(--ink); font-size: 1.1em; }
+.sb-empty span { max-width: 520px; }
+.sb-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.sb-stat { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--chip); font-size: .9em; }
+.sb-stat.chg { background: var(--primary-soft); color: var(--primary); }
+.sb-stat.bad { background: var(--err-soft); color: var(--err); }
+.sb-stat.warn { background: var(--warn-soft); color: var(--warn); }
+.sb-tablebox { flex: 0 1 auto; min-height: 120px; }
+.sb-name { display: grid; gap: 1px; max-width: 320px; }
+.sb-name > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.sb-name .k-muted { font-size: .85em; }
+.sb-pct { font-size: .85em; padding: 0 6px; border-radius: 999px; }
+.sb-pct.up { color: var(--err); background: var(--err-soft); }
+.sb-pct.down { color: var(--ok); background: var(--ok-soft); }
+.sb-pct.big { color: var(--warn); background: var(--warn-soft); font-weight: 600; }
+.sb-st { font-size: .88em; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+.sb-st.s-成功 { background: var(--ok-soft); color: var(--ok); }
+.sb-st.s-失败, .sb-st.s-部分失败, .sb-st.s-有错误 { background: var(--err-soft); color: var(--err); }
+.sb-st.s-待提交 { background: var(--primary-soft); color: var(--primary); }
+.sb-st.s-未提交 { background: var(--warn-soft); color: var(--warn); }
+.sb-note { color: var(--muted); font-size: .88em; white-space: normal; }
+.sb-bad { color: var(--err); }
+.sb-ok { color: var(--ok); }
+.sb-more { padding: 8px 12px; }
+.sb-table td:last-child { white-space: normal; }
+.sb-check { display: inline-flex; align-items: center; gap: 8px; }
+.sb-confirm { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--warn); font-weight: 500; }
+.sb-auth { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 12px; align-content: start; }
+.sb-card { padding: 14px 16px; display: grid; gap: 10px; }
+.sb-card h3 { margin: 0; font-size: 1.05em; }
+.sb-card p { margin: 0; }
+.sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 14px; }
+.sb-wide { grid-column: 1 / -1; }
+.sb-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sb-kv { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sb-kv li { display: flex; gap: 12px; }
+.sb-kv span { color: var(--muted); min-width: 80px; }

@@ -1,0 +1,16 @@
+{
+  "id": "e13",
+  "slug": "shopee-batch-price",
+  "name": "虾皮批量改价改库存",
+  "version": "0.1.0",
+  "repo": "campfire-code/shopee-batch-price",
+  "license": "MIT",
+  "ui": {
+    "layout": "e",
+    "palette": "blue"
+  },
+  "upstream": {
+    "repo": "congminh1254/shopee-sdk",
+    "license": "MIT"
+  }
+}
