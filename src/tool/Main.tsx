@@ -1,6 +1,6 @@
 // 虾皮批量改价改库存：两个页面——「改价改库存」（选表 → 读当前数据 → 对比 → 提交 → 导出）与「店铺授权」。
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, ExternalLink, FileSpreadsheet, KeyRound, Loader2, Play, RefreshCw, Download, ShieldCheck, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Check, ExternalLink, FileSpreadsheet, KeyRound, Loader2, Play, RefreshCw, Download, ShieldCheck, Trash2 } from 'lucide-react';
 import type { RunContext } from '../kit/types';
 import { httpFetch, openLink, pickFiles, reveal } from '../kit/platform';
 import { useDroppedFiles } from '../kit/parts';
@@ -24,6 +24,7 @@ const fetcher: Fetcher = async (url, init) => {
   return { status: r.status, text: await r.text() };
 };
 
+const siteName = (k: string) => SITES.find(([c]) => c === k)?.[1] ?? k;
 const money = (n: number | null, cur: string) => (n == null ? '—' : `${cur ? cur + ' ' : ''}${n}`);
 const expireText = (at: number, now: number) => {
   if (!at) return '未授权';
@@ -129,7 +130,7 @@ export function Main({ ctx }: { ctx: Ctx }) {
         <button role="tab" aria-selected={tab === 'auth'} className={`k-chip${tab === 'auth' ? ' on' : ''}`} onClick={() => setTab('auth')}>店铺授权</button>
         <span className="b-sp" />
         <span className={`sb-conn${ready ? ' ok' : ''}`}>
-          {ready ? <><ShieldCheck size={14} />店铺 {cred.shopId} · {cred.site} · {ENVS[cred.env].label}</> : <><KeyRound size={14} />未授权店铺</>}
+          {ready ? <><ShieldCheck size={14} />店铺 {cred.shopId} · {siteName(cred.site)} · {ENVS[cred.env].label}</> : <><KeyRound size={14} />未授权店铺</>}
         </span>
       </div>
       {notice && (
@@ -142,11 +143,11 @@ export function Main({ ctx }: { ctx: Ctx }) {
         <AuthPage cred={cred} now={now} onChange={updateCred} makeClient={client} setNotice={setNotice} onDone={() => setTab('work')} />
       ) : (
         <div className="sb-work">
-          <section className="k-panel sb-bar">
+          <section className="sb-bar">
             <button className="k-btn" onClick={() => void pick()} disabled={busy}><FileSpreadsheet size={15} />{table ? '换一个表格' : '选择表格'}</button>
-            <span className="sb-file k-num">{table ? `${table.name} · ${table.rows.length} 行` : '把 .xlsx / .csv 拖进窗口，或点左侧选择'}</span>
+            <span className="sb-file k-num">{table ? `${table.name} · ${table.rows.length} 行` : '把 xlsx 或 csv 表格拖进窗口，或点左侧选择'}</span>
             <span className="b-sp" />
-            <label className="sb-inline">速度
+            <label className="sb-inline">请求速度
               <select className="k-input sb-sel" value={rate} onChange={(e) => setRate(Number(e.target.value))} disabled={busy}>
                 {RATE_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
@@ -160,15 +161,9 @@ export function Main({ ctx }: { ctx: Ctx }) {
           {table && stage === 'parsed' && <ParsedTable table={table} />}
           {diff.length > 0 && (
             <>
-              <div className="sb-stats">
-                <span className="sb-stat">共 <b className="k-num">{stats.total}</b> 行</span>
-                <span className="sb-stat chg">有变化 <b className="k-num">{stats.change}</b></span>
-                <span className="sb-stat">无变化 <b className="k-num">{stats.same}</b></span>
-                <span className={`sb-stat${stats.error ? ' bad' : ''}`}>有问题 <b className="k-num">{stats.error}</b></span>
-                {stats.big > 0 && <span className="sb-stat warn"><AlertTriangle size={13} />涨跌超 50% <b className="k-num">{stats.big}</b></span>}
-              </div>
-              <DiffTable rows={diff} results={results} includeBig={includeBig} submitted={stage === 'done'} />
-              <section className="k-panel sb-foot">
+              <Hero rows={diff} stats={stats} includeBig={includeBig} />
+              <Ruler rows={diff} results={results} includeBig={includeBig} submitted={stage === 'done'} />
+              <section className="sb-dock">
                 {stats.big > 0 && (
                   <label className="sb-check"><input type="checkbox" checked={includeBig} disabled={busy || stage === 'done'} onChange={(e) => setIncludeBig(e.target.checked)} />
                     我已核对，涨跌超过 50% 的 {stats.big} 行也一起提交</label>
@@ -194,10 +189,31 @@ export function Main({ ctx }: { ctx: Ctx }) {
 
 function Empty() {
   return (
-    <section className="k-panel sb-empty">
-      <FileSpreadsheet size={28} />
-      <b>用表格一次改很多商品的价格和库存</b>
-      <span className="k-muted">表头至少要有「商品ID」和「新价格」或「新库存」；多规格商品再加「规格ID」或「规格货号」。先读取店铺当前数据对比，确认无误再提交。</span>
+    <section className="sb-empty">
+      <svg className="sb-art" viewBox="0 0 560 150" role="img" aria-label="示意图：改价表对照店铺现价，在价格标尺上核对后提交">
+        <rect x="8" y="30" width="116" height="90" rx="10" className="a-box" />
+        <path d="M24 56h84M24 76h84M24 96h56" className="a-line" />
+        <rect x="222" y="30" width="116" height="90" rx="10" className="a-box" />
+        <path d="M240 75h80" className="a-axis" />
+        <path d="M280 62v26" className="a-tick" />
+        <circle cx="304" cy="75" r="6" className="a-dot up" />
+        <circle cx="256" cy="75" r="6" className="a-dot down" />
+        <rect x="436" y="30" width="116" height="90" rx="10" className="a-box" />
+        <path d="M452 56h84M452 76h84M452 96h84" className="a-line" />
+        <path d="M436 52h116" className="a-roof" />
+        <path d="M130 75h86M344 75h86" className="a-flow" />
+        <path d="M210 69l8 6-8 6M424 69l8 6-8 6" className="a-flow" />
+        <text x="66" y="142" textAnchor="middle" className="a-cap">改价表</text>
+        <text x="280" y="142" textAnchor="middle" className="a-cap">价格标尺</text>
+        <text x="494" y="142" textAnchor="middle" className="a-cap">店铺商品</text>
+      </svg>
+      <b>表里的新价，落在标尺的哪一格，一眼看清</b>
+      <span className="k-muted">读取店铺当前价格和库存后，每个规格画成一条标尺：圆点偏左是降价，偏右是涨价，落进两端斜纹区的涨跌超过 50%，默认不提交。</span>
+      <ul className="sb-need">
+        <li><b>商品ID</b>：必填</li>
+        <li><b>新价格</b>或<b>新库存</b>：至少一列</li>
+        <li><b>规格ID</b>或<b>规格货号</b>：多规格商品加</li>
+      </ul>
     </section>
   );
 }
@@ -221,31 +237,104 @@ function ParsedTable({ table }: { table: LoadedTable }) {
   );
 }
 
-function DiffTable({ rows, results, includeBig, submitted }: { rows: DiffRow[]; results: Map<number, RowResult>; includeBig: boolean; submitted: boolean }) {
+const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
+const SPAN = 0.8; // 标尺左右各显示到 80% 涨跌幅
+const place = (p: number) => 50 + (Math.max(-SPAN, Math.min(SPAN, p)) / SPAN) * 50;
+
+function Hero({ rows, stats, includeBig }: { rows: DiffRow[]; stats: ReturnType<typeof diffStats>; includeBig: boolean }) {
+  const priced = rows.filter((r) => r.status === 'change' && r.priceChanged && r.pricePct != null);
+  const avg = priced.length ? priced.reduce((a, r) => a + r.pricePct!, 0) / priced.length : 0;
+  const up = priced.filter((r) => r.pricePct! > 0).length;
+  const stockRows = rows.filter((r) => r.status === 'change' && r.stockChanged);
+  const net = stockRows.reduce((a, r) => a + (r.newStock ?? 0) - (r.oldStock ?? 0), 0);
+  const held = rows.filter((r) => r.big && !includeBig).length;
   return (
-    <section className="k-panel sb-tablebox k-scroll">
-      <table className="k-table">
-        <thead><tr><th>行</th><th>商品 / 规格</th><th>价格</th><th>库存</th><th>状态</th></tr></thead>
-        <tbody>
-          {rows.slice(0, 1000).map((r) => {
-            const res = results.get(r.line);
-            const st = submitted || res ? finalState(r, res, includeBig, submitted) : r.status === 'error' ? '有错误' : r.status === 'same' ? '无变化' : r.big && !includeBig ? '未提交' : '待提交';
-            const note = r.status === 'error' ? r.error : failReason(res) || (st === '未提交' && r.big ? '涨跌超过 50%，未勾选提交' : '');
-            return (
-              <tr key={r.line} className={r.status === 'error' ? 'sb-row-err' : ''}>
-                <td className="k-num">{r.line}</td>
-                <td><div className="sb-name"><span>{r.itemName || (r.itemId ?? '')}</span><span className="k-muted k-num">{r.itemId ?? ''}{r.modelName ? ` · ${r.modelName}` : ''}{r.sku ? ` · ${r.sku}` : ''}</span></div></td>
-                <td className="k-num">{r.newPrice == null ? <span className="k-muted">不改</span> : <>{money(r.oldPrice, r.currency)} → <b>{r.newPrice}</b> {r.pricePct != null && <span className={`sb-pct${r.big ? ' big' : r.pricePct > 0 ? ' up' : ' down'}`}>{fmtPct(r.pricePct)}</span>}</>}</td>
-                <td className="k-num">{r.newStock == null ? <span className="k-muted">不改</span> : <>{r.oldStock ?? '—'} → <b>{r.newStock}</b></>}</td>
-                <td><span className={`sb-st s-${st}`}>{st}</span>{note ? <span className="sb-note"> {note}</span> : null}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {rows.length > 1000 && <div className="k-muted sb-more">只显示前 1000 行，提交与导出包含全部。</div>}
+    <section className="sb-hero" aria-label="本次改动概览">
+      <div className="sb-tile main">
+        <span className="sb-tile-k">平均调价幅度</span>
+        <b className="sb-big k-num">{priced.length ? `${sign(avg)}${Math.abs(avg * 100).toFixed(1)}%` : '—'}</b>
+        <span className="sb-tile-s">{priced.length} 行改价 · 涨 {up} · 降 {priced.length - up}</span>
+      </div>
+      <div className="sb-tile">
+        <span className="sb-tile-k">库存净变化</span>
+        <b className="sb-big k-num">{stockRows.length ? `${sign(net)}${Math.abs(net)}` : '—'}</b>
+        <span className="sb-tile-s">{stockRows.length} 行改库存</span>
+      </div>
+      <div className={`sb-tile${held ? ' warn' : ''}`}>
+        <span className="sb-tile-k">被拦下待核对</span>
+        <b className="sb-big k-num">{held}</b>
+        <span className="sb-tile-s">涨跌超 50% 的行</span>
+      </div>
+      <div className={`sb-tile${stats.error ? ' bad' : ''}`}>
+        <span className="sb-tile-k">有问题的行</span>
+        <b className="sb-big k-num">{stats.error}</b>
+        <span className="sb-tile-s">共 {stats.total} 行 · 无变化 {stats.same}</span>
+      </div>
     </section>
   );
+}
+
+type Filter = 'all' | 'change' | 'watch' | 'error';
+
+function Ruler({ rows, results, includeBig, submitted }: { rows: DiffRow[]; results: Map<number, RowResult>; includeBig: boolean; submitted: boolean }) {
+  const [filter, setFilter] = useState<Filter>('all');
+  const count = (f: Filter) => rows.filter((r) => pass(r, f)).length;
+  const shown = rows.filter((r) => pass(r, filter));
+  return (
+    <section className="sb-ruler">
+      <div className="sb-ruler-hd">
+        <div className="sb-filters" role="group" aria-label="筛选">
+          {([['all', '全部'], ['change', '有变化'], ['watch', '需留意'], ['error', '有问题']] as [Filter, string][]).map(([k, l]) => (
+            <button key={k} className={`k-chip${filter === k ? ' on' : ''}`} aria-pressed={filter === k} onClick={() => setFilter(k)}>{l} <span className="k-num">{count(k)}</span></button>
+          ))}
+        </div>
+        <div className="sb-scale">圆点偏左是降价，偏右是涨价；斜纹区表示涨跌超过 50%</div>
+      </div>
+      <div className="sb-list k-scroll">
+        {shown.slice(0, 1000).map((r) => {
+          const res = results.get(r.line);
+          const st = submitted || res ? finalState(r, res, includeBig, submitted) : r.status === 'error' ? '有错误' : r.status === 'same' ? '无变化' : r.big && !includeBig ? '未提交' : '待提交';
+          const note = r.status === 'error' ? r.error : failReason(res) || (st === '未提交' && r.big ? '涨跌超过 50%，未勾选提交' : '');
+          const p = r.pricePct;
+          const w = p == null ? 0 : Math.abs(place(p) - 50);
+          return (
+            <article key={r.line} className={`sb-item${r.status === 'error' ? ' err' : ''}${r.big ? ' big' : ''}`}>
+              <div className="sb-who">
+                <b title={r.itemName || String(r.itemId ?? '')}>{r.itemName || (r.itemId ?? `第 ${r.line} 行`)}</b>
+                <span className="k-muted k-num">第 {r.line} 行 · {r.itemId ?? ''}{r.modelName ? ` · ${r.modelName}` : ''}{r.sku ? ` · ${r.sku}` : ''}</span>
+              </div>
+              {r.status === 'error' ? <div className="sb-errline"><AlertTriangle size={14} />{note}</div> : (
+                <>
+                  <div className="sb-track-box">
+                    {r.newPrice == null ? <span className="k-muted sb-nochg">这行不改价</span> : (
+                      <>
+                        <div className="sb-track" role="img" aria-label={`价格${r.pricePct == null ? '' : fmtPct(r.pricePct)}`}>
+                          <i className="sb-zero" />
+                          {p != null && <i className={`sb-bar-fill ${p >= 0 ? 'up' : 'down'}${r.big ? ' big' : ''}`} style={{ left: `${Math.min(50, place(p))}%`, width: `${w}%` }} />}
+                          {p != null && <i className={`sb-pin ${p >= 0 ? 'up' : 'down'}${r.big ? ' big' : ''}`} style={{ left: `${place(p)}%` }} />}
+                        </div>
+                        <div className="sb-price k-num">{money(r.oldPrice, r.currency)}<ArrowRight size={13} /><b>{r.newPrice}</b>{p != null && <span className={`sb-pct${r.big ? ' big' : p > 0 ? ' up' : ' down'}`}>{fmtPct(p)}</span>}</div>
+                      </>
+                    )}
+                  </div>
+                  <div className="sb-stock k-num">
+                    {r.newStock == null ? <span className="k-muted">不改库存</span> : <><span className="k-muted">库存</span> {r.oldStock ?? '—'}<ArrowRight size={13} /><b>{r.newStock}</b></>}
+                  </div>
+                </>
+              )}
+              <div className="sb-state"><span className={`sb-st s-${st}`}>{st}</span>{note && r.status !== 'error' ? <span className="sb-note">{note}</span> : null}</div>
+            </article>
+          );
+        })}
+        {shown.length === 0 && <div className="k-muted sb-more">这一类没有行。</div>}
+        {shown.length > 1000 && <div className="k-muted sb-more">只显示前 1000 行，提交与导出包含全部。</div>}
+      </div>
+    </section>
+  );
+}
+
+function pass(r: DiffRow, f: Filter) {
+  return f === 'all' ? true : f === 'change' ? r.status === 'change' : f === 'error' ? r.status === 'error' : r.big;
 }
 
 function AuthPage({ cred, now, onChange, makeClient, setNotice, onDone }: {
@@ -262,7 +351,7 @@ function AuthPage({ cred, now, onChange, makeClient, setNotice, onDone }: {
     <div className="sb-auth">
       <section className="k-panel sb-card">
         <h3>1. 开放平台应用信息</h3>
-        <p className="k-muted">先在 Shopee 开放平台注册开发者并创建应用、通过审核，拿到 Partner ID 和 Partner Key。{'这两项只保存在本机设置文件里，不会上传。'}</p>
+        <p className="k-muted">先在 Shopee 开放平台注册开发者并创建应用、通过审核，拿到 Partner ID（合作方编号）和 Partner Key（合作方密钥）。这两项只保存在本机设置文件里，不会上传。</p>
         <div className="sb-grid">
           <label className="k-field">环境
             <select className="k-input" value={cred.env} onChange={(e) => set({ env: e.target.value as Cred['env'] })}>
@@ -274,13 +363,13 @@ function AuthPage({ cred, now, onChange, makeClient, setNotice, onDone }: {
               {SITES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </select>
           </label>
-          <label className="k-field">Partner ID
+          <label className="k-field">Partner ID（合作方编号）
             <input className="k-input" inputMode="numeric" value={cred.partnerId} onChange={(e) => set({ partnerId: e.target.value.trim() })} />
           </label>
-          <label className="k-field">Partner Key
+          <label className="k-field">Partner Key（合作方密钥）
             <input className="k-input" type="password" autoComplete="off" value={cred.partnerKey} onChange={(e) => set({ partnerKey: e.target.value.trim() })} />
           </label>
-          <label className="k-field sb-wide">授权回跳地址（须与应用里填写的 Redirect URL 一致）
+          <label className="k-field sb-wide">授权回跳地址（须与应用里填写的回跳地址完全一致）
             <input className="k-input" value={cred.redirect} onChange={(e) => set({ redirect: e.target.value.trim() })} />
           </label>
         </div>

@@ -8,8 +8,8 @@ export type Cell = string | number | boolean | Date | null;
 /** 官方接口文档 v2.product.update_price：SG/MY/BR/MX/PL/ES/AR 可以设两位小数，其他站点只能设整数 */
 export const DECIMAL_SITES = ['SG', 'MY', 'BR', 'MX', 'PL', 'ES', 'AR'];
 export const SITES: [string, string][] = [
-  ['SG', '新加坡 SG'], ['MY', '马来西亚 MY'], ['TW', '台湾 TW'], ['TH', '泰国 TH'], ['VN', '越南 VN'], ['ID', '印尼 ID'], ['PH', '菲律宾 PH'],
-  ['BR', '巴西 BR'], ['MX', '墨西哥 MX'], ['CO', '哥伦比亚 CO'], ['CL', '智利 CL'], ['PL', '波兰 PL'], ['ES', '西班牙 ES'], ['AR', '阿根廷 AR'],
+  ['SG', '新加坡'], ['MY', '马来西亚'], ['TW', '台湾'], ['TH', '泰国'], ['VN', '越南'], ['ID', '印尼'], ['PH', '菲律宾'],
+  ['BR', '巴西'], ['MX', '墨西哥'], ['CO', '哥伦比亚'], ['CL', '智利'], ['PL', '波兰'], ['ES', '西班牙'], ['AR', '阿根廷'],
 ];
 export const priceDecimals = (site: string) => (DECIMAL_SITES.includes(site) ? 2 : 0);
 
@@ -76,6 +76,7 @@ const decimalsOf = (n: number) => {
 /** 解析表格为改动行：留空的价格 / 库存表示不改；有问题的行写进 error */
 export function parseRows(header: string[], rows: Cell[][], site: string): InputRow[] {
   const col = mapColumns(header);
+  // check-zh: 忽略（表头别名 item_id，需原样提示给用户）
   if (col.itemId < 0) throw new Error('表头里没有「商品ID」列（也可写 item_id）');
   if (col.newPrice < 0 && col.newStock < 0) throw new Error('表头里没有「新价格」或「新库存」列');
   const dec = priceDecimals(site);
@@ -354,10 +355,12 @@ export function parseRedirect(input: string): { code: string; shopId: number | n
     q = new URLSearchParams(s.includes('?') ? s.slice(s.indexOf('?') + 1) : s);
   }
   const code = q.get('code') ?? '';
+  // check-zh: 忽略（网址里的参数名 code，用户要对照网址查找）
   if (!code) throw new Error('网址里没有 code 参数，请确认已在授权页点了「确认授权」，并复制跳转后的完整网址');
   const num = (k: string) => (q.get(k) && /^\d+$/.test(q.get(k)!) ? Number(q.get(k)) : null);
   const shopId = num('shop_id');
   const mainAccountId = num('main_account_id');
+  // check-zh: 忽略（网址里的参数名 shop_id，用户要对照网址查找）
   if (shopId == null && mainAccountId == null) throw new Error('网址里没有 shop_id，请确认授权的是店铺');
   return { code, shopId, mainAccountId };
 }

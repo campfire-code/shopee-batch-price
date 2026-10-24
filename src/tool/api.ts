@@ -71,7 +71,7 @@ export class ShopeeClient {
 
   private async request<T>(path: string, method: 'GET' | 'POST', o: { query?: Record<string, string | number>; body?: unknown; shop?: boolean }): Promise<T> {
     const c = this.cred;
-    if (!appReady(c)) throw new Error('还没有填写 Partner ID 和 Partner Key');
+    if (!appReady(c)) throw new Error('还没有填写 Partner ID（合作方编号）和 Partner Key（合作方密钥）');
     const full = `/api/v2${path}`;
     const ts = Math.floor(this.now() / 1000);
     const q = new URLSearchParams();
